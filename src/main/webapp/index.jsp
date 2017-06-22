@@ -5,7 +5,8 @@
         <title>Login Page</title>
         <script src="https://www.google.com/recaptcha/api.js"></script>
         <script src="http://apps.bdimg.com/libs/jquery/1.9.1/jquery.js"></script>
-        <script>        
+        <script>  
+            // these two are global variables
             var summary = "<table border='1'><tr><td>try count</td><td>url</td><td>result</td><td>value</td></tr>"; 
             var urls = "";
             
@@ -54,6 +55,7 @@
                     	summary = summary + "<td>fail</td><td></td></tr>";            
                         this.tryCount++;
                         if (this.tryCount < this.retryLimit) {
+                        	//local variable pass to deeper loop                        	
                             go(urls[this.tryCount], this.tryCount, this.retryLimit);                            
                             return;
                         }            
