@@ -1,0 +1,132 @@
+/* 
+============================================================================  
+    Environment
+    1. Eclipse 4.6.1 in Windows 7 64bit
+    2. gradle-3.4.1
+       
+       
+    Setup in Development Machine
+    1. install JDK, and setup JAVA_HOME
+    2. install gradle, and setup gradle\bin in PATH
+
+
+    Config 
+    1. by command
+            gradle eclipse                   # generate library for eclipse
+    2. by eclpse
+            right click project, Gradle > Refresh Gradle Project
+    
+                          
+    Run    
+    1. Open a command prompt in the project path
+    2. gradle clean             
+    3. gradle test 
+    4. gradle build
+  
+    5. gradle --stacktrace clean build appRun       #run jetty
+       
+    Deploy and Run
+    6. gradle clean test build
+    7. put the ./build/libs/ip.war into tomcat/jetty to run
+    
+        
+============================================================================
+*/
+
+
+apply plugin: 'java'
+
+compileJava.options.encoding = 'UTF-8'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+sourceSets.main.output.resourcesDir = sourceSets.main.output.classesDir
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.slf4j:slf4j-log4j12:1.7.25"
+    compile "log4j:log4j:1.2.17"
+    compile "log4j:apache-log4j-extras:1.2.17"
+    
+    // for using org.apache.logging.log4j.web.Log4jServletContextListener 
+    compile "org.apache.logging.log4j:log4j-web:2.7"
+    
+    compile "org.jsoup:jsoup:1.10.2"
+    compile "org.json:json:20170516"
+    
+    // if compile, they'll be packed into war too, which might be conflict with actual container lib
+    compileOnly "javax.servlet:servlet-api:2.5"
+    compileOnly "javax.servlet:jsp-api:2.0"
+
+    testCompile 'junit:junit:4.11'
+}
+
+//------------------------------------------------------------------------------------------------
+
+
+apply plugin: 'org.akhikhl.gretty'
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "gradle.plugin.org.akhikhl.gretty:gretty:1.4.2"
+    }
+}
+
+
+gretty {
+    //throws exception "Could not set unknown property 'port' for object of type org.akhikhl.gretty.GrettyExtension."
+    //port = 8083 
+    httpPort = 8001
+    contextPath = '/'
+    servletContainer = 'jetty9'
+    
+    loggingLevel='INFO'
+    debugPort = 5005      // default
+    debugSuspend = true   // default
+
+    httpsEnabled = true
+    httpsPort = 8443
+    sslKeyStorePath = 'some.jks'
+    sslKeyStorePassword = 'somepwd'  
+}
+
+
+//------------------------------------------------------------------------------------------------
+
+
+apply plugin: 'war'
+
+war {
+    group = "ajax"
+    baseName = "ip"
+
+    /*
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    */
+}
+
+
+//------------------------------------------------------------------------------------------------
+
+
+apply plugin: 'eclipse'
+
+eclipse {
+    classpath {
+        /*
+            1. This is the default behavior, https://docs.gradle.org/current/dsl/org.gradle.plugins.ide.eclipse.model.EclipseClasspath.html#org.gradle.plugins.ide.eclipse.model.EclipseClasspath:downloadSources                     
+            2. if not work, try by clearing /~[user]/.gradle/caches/*.*                
+        */
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
